@@ -1,0 +1,37 @@
+name: Update Fuel Prices
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # Runs daily at 8:00 AM UTC
+  workflow_dispatch: # Allows you to run it manually from the "Actions" tab
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allows the bot to commit the new data.json
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Scraper
+        run: python scraper.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "ZIM Fuel Bot"
+          git config --global user.email "bot@github.com"
+          git add data.json
+          git commit -m "Auto-update fuel prices: $(date)" || echo "No changes to commit"
+          git push
