@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zimbabwe Fuel Price Tracker (ZERA)</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --accent: #e74c3c;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 500px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .price-card {
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .price-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .fuel-info {
+            text-align: left;
+        }
+
+        .fuel-name {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .fuel-zig {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .price-tag {
+            text-align: right;
+        }
+
+        .usd-price {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .zig-price {
+            font-size: 14px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .calculator {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 15px;
+            text-align: left;
+        }
+
+        .calculator h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: var(--primary);
+        }
+
+        .calc-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            flex-grow: 1;
+        }
+
+        .calc-result {
+            font-weight: bold;
+            color: var(--secondary);
+            font-size: 18px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="badge">OFFICIAL DATA (ZERA)</div>
+            <h1>Zimbabwe Fuel Pulse</h1>
+            <p id="update-date">Loading data...</p>
+        </div>
+
+        <!-- Petrol Card -->
+        <div class="price-card">
+            <div class="fuel-info">
+                <div class="fuel-name">Petrol (E5)</div>
+                <div class="fuel-zig">ZERA Regulated</div>
+            </div>
+            <div class="price-tag">
+                <div class="usd-price" id="petrol-usd">--</div>
+                <div class="zig-price" id="petrol-zig">--</div>
+            </div>
+        </div>
+
+        <!-- Diesel Card -->
+        <div class="price-card">
+            <div class="fuel-info">
+                <div class="fuel-name">Diesel (D50)</div>
+                <div class="fuel-zig">ZERA Regulated</div>
+            </div>
+            <div class="price-tag">
+                <div class="usd-price" id="diesel-usd">--</div>
+                <div class="zig-price" id="diesel-zig">--</div>
+            </div>
+        </div>
+
+        <div class="calculator">
+            <h3>Tank Cost Calculator</h3>
+            <div class="calc-group">
+                <input type="number" id="liters" value="60" placeholder="Liters">
+                <select id="fuel-type">
+                    <option value="petrol">Petrol</option>
+                    <option value="diesel">Diesel</option>
+                </select>
+            </div>
+            <div class="calc-result" id="total-cost">Total: $0.00</div>
+        </div>
+
+        <div class="footer">
+            <p>Data automatically synced with www.zera.co.zw</p>
+            <p>© 2026 Naboth Sithole - Zimbabwe Tech Projects</p>
+        </div>
+    </div>
+
+    <script>
+        let fuelData = null;
+
+        async function updateUI() {
+            try {
+                const response = await fetch('data.json');
+                fuelData = await response.json();
+
+                document.getElementById('update-date').innerText = `Updated: ${fuelData.last_updated}`;
+                document.getElementById('petrol-usd').innerText = `$${fuelData.petrol.usd}`;
+                document.getElementById('petrol-zig').innerText = `ZiG ${fuelData.petrol.zig}`;
+                document.getElementById('diesel-usd').innerText = `$${fuelData.diesel.usd}`;
+                document.getElementById('diesel-zig').innerText = `ZiG ${fuelData.diesel.zig}`;
+
+                calculate();
+            } catch (error) {
+                console.error('Error loading fuel data:', error);
+                document.getElementById('update-date').innerText = 'Error loading data';
+            }
+        }
+
+        function calculate() {
+            if (!fuelData) return;
+            const liters = document.getElementById('liters').value;
+            const type = document.getElementById('fuel-type').value;
+            const price = fuelData[type].usd;
+            const total = (liters * price).toFixed(2);
+            document.getElementById('total-cost').innerText = `Total: $${total} USD`;
+        }
+
+        document.getElementById('liters').addEventListener('input', calculate);
+        document.getElementById('fuel-type').addEventListener('change', calculate);
+
+        updateUI();
+    </script>
+</body>
+</html>
