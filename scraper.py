@@ -57,7 +57,26 @@ def scrape_zera():
         with open('data.json', 'w') as f:
             json.dump(data, f, indent=4)
         
-        print("Scraping successful. Data saved to data.json")
+        # Update history.json
+        try:
+            with open('history.json', 'r') as f:
+                history = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            history = []
+            
+        # Only add if the date is new to avoid duplicates
+        if not any(entry['date'] == data['last_updated'] for entry in history):
+            history.append({
+                "date": data['last_updated'],
+                "petrol": float(data['petrol']['usd']),
+                "diesel": float(data['diesel']['usd'])
+            })
+            # Keep last 12 entries for a clean year view
+            history = history[-12:]
+            with open('history.json', 'w') as f:
+                json.dump(history, f, indent=4)
+        
+        print("Scraping successful. Data saved to data.json and history.json")
         return data
 
     except Exception as e:
